@@ -45,7 +45,7 @@ public class GUI extends JFrame{
         for (i = 0; i < 37; i++)
         {
             labels[i + 1] = new CustomLabel();
-            ImageIcon icon = new ImageIcon("E:\\cards\\" + Integer.toString(i) + ".jpg");
+            ImageIcon icon = new ImageIcon("src/Cards/" + Integer.toString(i) + ".jpg");
             img[i] = icon;
             if (i < 36)
                 img_pos[i] = true;
@@ -102,8 +102,6 @@ public class GUI extends JFrame{
                 {
                     labels[i].setIcon(img[k]);
                     container.add(labels[i]);
-                    ImageIcon icon = new ImageIcon("E:\\cards\\" + Integer.toString(i) + ".jpg");
-                    labels[i].setPreferredSize(new Dimension(icon.getIconWidth(), icon.getIconHeight()));
                     pictures[i] = new picture();
                     pictures[i].Enabled = true;
                     pictures[i].M = k % 4;
