@@ -4,9 +4,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 public class GUI extends JFrame {
-
     public GUI()
     {
         super("Дурак (меню)");
@@ -29,7 +29,13 @@ class Button0EventListener implements ActionListener
     @Override
     public void actionPerformed(ActionEvent e)
     {
-        Game app1 = new Game();
+        Game app1 = null;
+        try {
+            app1 = new Game();
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
         app1.setVisible(true);
     }
 }

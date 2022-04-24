@@ -1,4 +1,5 @@
 package com.company;
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -6,9 +7,12 @@ import javax.swing.*;
 import java.beans.EventHandler;
 import java.awt.Image;
 import javax.swing.ImageIcon;
+import java.io.File;
+import java.io.IOException;
 import java.util.Random;
 
-public class Game extends JFrame{
+public class Game extends JFrame
+{
     Container container = this.getContentPane();
     CustomLabel[] labels = new CustomLabel[48];
     ImageIcon[] arrow = new ImageIcon[2];
@@ -22,35 +26,14 @@ public class Game extends JFrame{
     boolean[] img_pos = new boolean[36];
     Random rnd = new Random();
     Queue queue = new Queue();
+    Bot bot;
 
-    public void find_card(int i)
-    {
-        int k;
-        do {
-            k = rnd.nextInt(36);
-            if (img_pos[k])
-            {
-                labels[i].setIcon(img[k]);
-                container.add(labels[i]);
-                pictures[i] = new picture();
-                pictures[i].Enabled = true;
-                pictures[i].M = k % 4;
-                pictures[i].V = k / 4;
-                Index index = new Index();
-                index.I = i;
-                labels[i].SetTag(index);
-            }
-        }
-        while (!img_pos[k]);
-        img_pos[k] = false;
-    }
-
-    public Game()
-    {
+    public Game() throws IOException {
         super("Дурак (подкидной) ");
         this.setBounds(0, 0, 1920, 1080);
         this.setResizable(false);
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        //this.getContentPane().add(new JPanelWithBackground("src/Cards/background.jpg"));
         container.setLayout(new GridLayout(4,12, 5, 10));
         container.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
         button1.addActionListener(new Button1EventListener());
@@ -75,12 +58,14 @@ public class Game extends JFrame{
             labels[i + 1] = new CustomLabel();
         arrow[0] = new ImageIcon("src/Cards/up.png");
         arrow[1] = new ImageIcon("src/Cards/down.png");
-        //генерация и выдача 6 карт верхнего игрока
+        //выдача карт верхнему игроку (боту)
+        bot = new Bot();
         i = 1;
         while (i < 7)
         {
-            labels[i].addMouseListener(new LabelClicker());
+            //labels[i].addMouseListener(new LabelClicker());
             find_card(i);
+            bot.AddValue(pictures[i].M, pictures[i].V);
             i++;
         }
         //выдача пустых 6 дополнительных слотов для карт верхнего игрока
@@ -99,6 +84,7 @@ public class Game extends JFrame{
         labels[44].setText("Осталось 24 карты");
         //генерация и выдача козырной карты
         find_card(13);
+        bot.M_K = pictures[13].M;
         //выдача пустых 6 слотов для скидываемых карт нижнего игрока
         for (i = 15; i < 26; i = i + 2)
         {
@@ -125,6 +111,36 @@ public class Game extends JFrame{
         {
             container.add(labels[i]);
         }
+
+    }
+    public void find_card(int i)
+    {
+        int k;
+        do {
+            k = rnd.nextInt(36);
+            if (img_pos[k])
+            {
+                pictures[i] = new picture();
+                pictures[i].Enabled = true;
+                pictures[i].M = k % 4;
+                pictures[i].V = k / 4;
+                if (i < 7)
+                {
+                    labels[i].setIcon(new ImageIcon("src/Cards/front.jpg"));
+                    container.add(labels[i]);
+                }
+                else
+                {
+                    labels[i].setIcon(img[k]);
+                    container.add(labels[i]);
+                    Index index = new Index();
+                    index.I = i;
+                    labels[i].SetTag(index);
+                }
+            }
+        }
+        while (!img_pos[k]);
+        img_pos[k] = false;
     }
 
     class Button1EventListener implements ActionListener
@@ -135,6 +151,8 @@ public class Game extends JFrame{
             int i;
             button1.setVisible(false);
             button2.setVisible(false);
+            Message bito = new Message("БИТО");
+            bito.setVisible(true);
             int n_b1 = 0, n_b2 = 0, n_c1 = 0, n_c2 = 0;
             for (i = 34; i < 40; i++)
             {
@@ -253,6 +271,8 @@ public class Game extends JFrame{
             int n_b = 0, n_c = 0, n_b1;
             button1.setVisible(false);
             button2.setVisible(false);
+            Message beru = new Message("БЕРУ");
+            beru.setVisible(true);
             if (queue.hod == -1) h = -6;
             else h = 0;
             for (int i = 34 + h; i < 40 + h; i++)
@@ -497,6 +517,14 @@ public class Game extends JFrame{
                     pictures[i].Enabled = false;
                 }
             }
+            bot.AddEnemyValue(pictures[k].M, pictures[k].V);
+            BotValues card = bot.Bito();
+            if (card != null)
+            {
+                labels[k + 1].setIcon(new ImageIcon("src/Cards/" + Integer.toString(4 * card.Value + card.Mast) + ".jpg"));
+                button1.setVisible(true);
+                button2.setVisible(false);
+            }
         }
 
         public void mouseEntered(MouseEvent e)
@@ -549,3 +577,18 @@ class CustomLabel extends JLabel
     }
 }
 
+ class JPanelWithBackground extends JPanel {
+
+    private Image backgroundImage;
+    public JPanelWithBackground(String fileName) throws IOException {
+        try {
+            backgroundImage = ImageIO.read(new File(fileName));
+        }
+        catch (IOException e)
+        {}
+    }
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        g.drawImage(backgroundImage, 0, 0, this);
+    }
+}
