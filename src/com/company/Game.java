@@ -181,7 +181,9 @@ public class Game extends JFrame
                                 k = rnd.nextInt(36);
                                 if (img_pos[k])
                                 {
-                                    labels[i].setIcon(img[k]);
+                                    if ((i < 7) || ((i > 27) && (i < 34)))
+                                        labels[i].setIcon(new ImageIcon("src/Cards/front.jpg"));
+                                    else labels[i].setIcon(img[k]);
                                     labels[i].setVisible(true);
                                     pictures[i].M = k % 4;
                                     pictures[i].V = k / 4;
@@ -260,6 +262,22 @@ public class Game extends JFrame
             else
                 labels[14].setIcon(arrow[0]);
             queue.sbros *= -1;
+
+            BotValues card = null;
+            if ((queue.sbros == -1) && (queue.hod == -1))
+                card = bot.Hod();
+            int k = 15;
+            int n = 1;
+            if (card != null)
+            {
+                labels[k + 1].setIcon(new ImageIcon("src/Cards/" + Integer.toString(4 * card.getValue() + card.getMast()) + ".jpg"));
+                labels[n].setVisible(false);
+                button2.setVisible(true);
+                button1.setVisible(false);
+                n += 1;
+                k += 2;
+                //queue.sbros *= -1;
+            }
         }
     }
     class Button2EventListener implements ActionListener
@@ -387,6 +405,21 @@ public class Game extends JFrame
             }
             if (queue.sbros != queue.hod)
                 queue.sbros = queue.hod;
+            BotValues card = null;
+            if ((queue.sbros == -1) && (queue.hod == -1))
+                card = bot.Hod();
+            int n = 1;
+            int k = 15;
+            if (card != null)
+            {
+                labels[k + 1].setIcon(new ImageIcon("src/Cards/" + Integer.toString(4 * card.getValue() + card.getMast()) + ".jpg"));
+                labels[n].setVisible(false);
+                button2.setVisible(true);
+                button1.setVisible(false);
+                n += 1;
+                k += 2;
+                //queue.sbros *= -1;
+            }
         }
     }
     class LabelClicker implements MouseListener
@@ -518,10 +551,13 @@ public class Game extends JFrame
                 }
             }
             bot.AddEnemyValue(pictures[k].M, pictures[k].V);
+            int n = bot.values.size();
             BotValues card = bot.Bito();
             if (card != null)
             {
-                labels[k + 1].setIcon(new ImageIcon("src/Cards/" + Integer.toString(4 * card.Value + card.Mast) + ".jpg"));
+                labels[k + 1].setIcon(new ImageIcon("src/Cards/" + Integer.toString(4 * card.getValue() + card.getMast()) + ".jpg"));
+                labels[n].setVisible(false);
+                n -= 1;
                 button1.setVisible(true);
                 button2.setVisible(false);
             }
