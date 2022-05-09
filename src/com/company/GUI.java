@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 
+// меню, появляющееся при запуске игры, содержащее на данном этапе лишь кнопку "Играть"
 public class GUI extends JFrame {
     public GUI()
     {

@@ -3,6 +3,7 @@ package com.company;
 import javax.swing.*;
 import java.awt.*;
 
+// класс - аналогия ShowMessage в шарпе (нужен будет для того, чтобы показать, что бот побил все карты игрока или решил взять)
 public class Message extends JFrame {
     public Message(String text)
     {
