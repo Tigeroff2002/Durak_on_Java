@@ -1,12 +1,10 @@
 package com.company;
 import javax.swing.ImageIcon;
-import java.io.File;
+import java.io.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Random;
-
 
 public class Game
 {
@@ -14,67 +12,94 @@ public class Game
             { 1, 2, 3, 4, 5, 6, 28, 29, 30, 31, 32, 33, 16, 18, 20, 22, 24, 26, 40, 41, 42, 43, 44, 13,
                     15, 17, 19, 21, 23, 25, 45, 46, 47, -1, -2, 14, 7,  8, 9, 10, 11, 12, 34, 35, 36, 37, 38, 39 };
     // раскладка карт на столе (визуальное представление доступно в папке Cards под названием layout.jpg)
-    card[] cards = new card[36];
-    boolean[] img_pos = new boolean[36];
-    String [] dirs = new String [] {"up", "down"};
-    Random rnd = new Random();
-    Queue queue = new Queue();
-    Bot bot;
+    public Bot bot;
+    public int getN_pictures() {
+        return n_pictures;
+    }
+    public void setN_pictures(int n_pictures) {
+        this.n_pictures = n_pictures;
+    }
+    private int n_pictures;
+    public int getN_koloda() {
+        return n_koloda;
+    }
+    public void setN_koloda(int n_koloda) {
+        this.n_koloda = n_koloda;
+    }
+    private int n_koloda;
+    public boolean isKoloda_empty() {
+        return koloda_empty;
+    }
+    public void setKoloda_empty(boolean koloda_empty) {
+        this.koloda_empty = koloda_empty;
+    }
+    private boolean koloda_empty;
+    private int Sbros;
+    private int Hod;
+    private int Winner;
+    private static String path;
     public Game() {
         // Инициализация параметров игры
-        Queue game = new Queue();
-        game.InitGame();
-        for (int i = 0; i < cards.length; i++)
-            cards[i] = new card();
+        InitGame();
         // Создание экземпляра бота
         bot = new Bot();
-        bot.M_K = cards[layout_indexes[(6*2 - 1) * 2 + 1]].M(); // установка козырной масти
+        bot.setM_K(GUI.labels[layout_indexes[(6*2 - 1) * 2 + 1]].getMast()); // установка козырной масти
     }
-}
-
-class card
-{
-    private int Mast;
-    private int Value;
-    private ImageIcon icon;
-    private boolean Enabled;
-    public void M (int Mast)
+    public void InitGame()
     {
-        this.Mast = Mast;
+        this.n_pictures = 12;
+        this.n_koloda = 36;
+        this.koloda_empty = false;
+        this.Sbros = 1;
+        this.Hod = 1;
+        this.Winner = 0;
     }
-    public int M() {return Mast;}
-    public void V (int Value)
+    private static String text;
+    public void EndGame()
     {
-        this.Value = Value;
+        this.path = "src/output/output.txt";
+        if ((n_pictures == 36) && (koloda_empty))
+            Winner = Sbros;
+        if (Winner == 1)
+            text = "Игрок выиграл";
+        else text = "Игрок проиграл";
+        try (FileWriter writer = new FileWriter(path, true)) {
+            writer.write(text);
+        }
+        catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+        Window app_end = new Window("Дурак (конец игры)", text);
+        app_end.setVisible(true);
     }
-    public int V() {return Value;}
-    public void En (boolean Enabled)
+    public void sbros (int Sbros)
     {
-        this.Enabled = Enabled;
+        this.Sbros = Sbros;
     }
-    public boolean En() {return Enabled;}
-    private static File f;
-    public void Icon(String path) throws IOException {
-        f = new File(path);
-        if (f.exists())
-            this.icon = new ImageIcon(f.toString());
-        else throw new IOException("Картинка(и) с картами не найдены!");
-    }
-    public card()
+    public int sbros() {return Sbros;}
+    public void hod (int Hod)
     {
-        Random rnd = new Random();
-        this.Mast = rnd.nextInt(4) + 1;
-        this.Value = rnd.nextInt(9) + 1;
-        this.Enabled = true;
+        this.Hod = Hod;
     }
-    /*
-    public card(int Mast, int Value)
+    public int hod()
     {
-        this.Mast = Mast;
-        this.Value = Value;
-        this.Enabled = true;
+        return Hod;
     }
-     */
+    public void changePlayer()
+    {
+        this.Sbros *= -1;
+        this.Hod *= -1;
+    }
+    public void InverseHod(int Hod)
+    {
+        this.Hod = Hod * -1;
+    }
+    public void InverseSbros(int Sbros)
+    {
+        this.Sbros = Sbros * -1;
+    }
+    public int[] player_values = new int[] { -1, -1, -1, -1, -1, -1 };
+    public int[] bot_values = new int[] { -1, -1, -1, -1, -1, -1 };
 }
 
 /* класс, представляющий ИИ программы. Бот имеет список своих карт (т.е. тех, которые у него в руке), и список карт врага (которые находятся на столе).
@@ -84,11 +109,17 @@ class card
 и когда бот будет брать карты игрока со стола (как бы нажимая виртуальную кнопку "Беру")
 
  */
+
 class Bot {
-    static int M_K;
+    public int getM_K() {
+        return M_K;
+    }
+    public void setM_K(int m_K) {
+        M_K = m_K;
+    }
+    private static int M_K;
     ArrayList<BotValues> values = new ArrayList<>();
     ArrayList<BotValues> envalues = new ArrayList<>();
-
     public void AddValue(int M, int V)
     {
         BotValues value = new BotValues(M, V);
@@ -100,11 +131,10 @@ class Bot {
         BotValues value = new BotValues(M, V);
         envalues.add(value);
     }
-
     public BotValues Bito_Card() // бот отбивается, метод возвращает выбранную им карту, которой он будет биться
     {
         BotValues returned_card = null;
-        Collections.sort(values, BotValues.COMPARE_BY_VALUE);
+        Collections.sort(values, COMPARE_BY_VALUE);
         for (int i = 0; i < envalues.size(); i++)
         {
             BotValues encard = envalues.get(i);
@@ -123,7 +153,6 @@ class Bot {
         }
         return returned_card;
     }
-
     public boolean Podkid_Possible() // бот подкидывает карту на стол в случае, если это возможно, метод возвращает возможность
     {
         boolean go = false;
@@ -138,19 +167,15 @@ class Bot {
         }
         return go;
     }
-
     public BotValues Hod_Card()
     {
         BotValues returned_card = null;
-        Collections.sort(values, BotValues.COMPARE_BY_VALUE);
+        Collections.sort(values, COMPARE_BY_VALUE);
         returned_card = values.get(0);
         values.remove(0);
         return returned_card;
     }
-
-    public void Bito()
-    {
-        BotValues card = null;
+    public BotValues Bito(BotValues card) throws IOException {
         int k = 15;
         int n = 1;
         card = Bito_Card();
@@ -163,9 +188,9 @@ class Bot {
             k += 2;
             GUI.button1.doClick();
         }
+        return card;
         //else button1.doClick();
     }
-
     public void Beru()
     {
         BotValues card = null;
@@ -174,68 +199,7 @@ class Bot {
             card = Hod_Card();
         GUI.button2.doClick();
     }
-}
-// класс для рабочих величин
-class Queue
-{
-    public void InitGame()
-    {
-        n_pictures = 12;
-        n_koloda = 36;
-        koloda_empty = false;
-    }
-    int n_pictures;
-    int n_koloda;
-    boolean koloda_empty;
-    private int Sbros;
-    private int Hod;
-    public void sbros (int Sbros)
-    {
-        this.Sbros = Sbros;
-    }
-    public int sbros() {return Sbros;}
-    public void hod (int Hod)
-    {
-        this.Hod = Hod;
-    }
-    public int hod() {return Hod;}
-    public void Queue()
-    {
-        this.Sbros = 1;
-        this.Hod = 1;
-    }
-    public void changePlayer()
-    {
-        this.Sbros *= -1;
-        this.Hod *= -1;
-    }
-    public int[] player_values = new int[] { -1, -1, -1, -1, -1, -1 };
-    public int[] bot_values = new int[] { -1, -1, -1, -1, -1, -1 };
-}
 
-class BotValues
-{
-    private int Mast;
-    private int Value;
-    private static int M_K = Bot.M_K;
-    public boolean Enabled;
-
-    public int getMast()
-    {
-        return Mast;
-    }
-
-    public int getValue()
-    {
-        return Value;
-    }
-
-    public BotValues(int M, int V)
-    {
-        this.Mast = M;
-        this.Value = V;
-        this.Enabled = true;
-    }
     public static final Comparator<BotValues> COMPARE_BY_VALUE = new Comparator<BotValues>() {
         @Override
         public int compare(BotValues lhs, BotValues rhs) {
@@ -245,10 +209,38 @@ class BotValues
             else first = lhs.getValue();
             if (rhs.getMast() == M_K)
                 second = rhs.getValue() + 10;
-            else second= rhs.getValue();
+            else second = rhs.getValue();
             return first - second;
         }
     };
 }
+
+class BotValues
+{
+    public void setMast(int mast) {
+        Mast = mast;
+    }
+    public int getMast()
+    {
+        return Mast;
+    }
+    private int Mast;
+    public void setValue(int value) {
+        Value = value;
+    }
+    public int getValue()
+    {
+        return Value;
+    }
+    private int Value;
+    public boolean Enabled;
+    public BotValues(int M, int V)
+    {
+        this.Mast = M;
+        this.Value = V;
+        this.Enabled = true;
+    }
+}
+
 
 

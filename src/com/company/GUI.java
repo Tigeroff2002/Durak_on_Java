@@ -20,11 +20,12 @@ public class GUI extends JFrame {
     ImageIcon[] arrow = new ImageIcon[2];
     static JButton button1 = new JButton("БИТО");
     static JButton button2 = new JButton("БЕРУ");
-    static ImageIcon[] img = new ImageIcon[36];
-    static boolean[] img_pos = new boolean[36];
+    static ImageIcon[] img = new ImageIcon[37];
+    static boolean[] img_pos = new boolean[37];
     static String [] dirs = new String [] {"up", "down"};
     static File f;
     Game GL;
+
     public GUI() throws IOException {
         super("Дурак (подкидной) ");
         Container container = this.getContentPane();
@@ -38,16 +39,18 @@ public class GUI extends JFrame {
         button2.addActionListener(new Button2EventListener());
         button1.setVisible(false);
         button2.setVisible(false);
-        Game GL = new Game();
-        for (int i = 0; i < 36; i++) // создание массива картинок
+        // Инициализация объекта игры GL
+        GL = new Game();
+        // инициализация labels
+        for (int i = 1; i < labels.length; i++)
+            labels[i] = new CustomLabel();
+        for (int i = 1; i < img_pos.length; i++) // создание массива картинок
         {
             f = new File("src/Cards/" + Integer.toString(i) + ".jpg");
             if (f.exists())
                 img[i] = new ImageIcon(f.toString());
             else throw new IOException("Картинка(и) с картами не найдены!");
-            img_pos[i] = true;
-            GL.cards[i + 1] = new card();
-            labels[i + 1] = new CustomLabel();
+            img_pos[i - 1] = true;
         }
         for (int i = 0; i < dirs.length; i++)
         {
@@ -69,28 +72,37 @@ public class GUI extends JFrame {
                 if ((value > 6) && (value < 13))
                     labels[value].addMouseListener(new LabelClicker());
                 else if (value < 7)
-                    bot.AddValue(GL.cards[value].M(), GL.cards[value].V());
+                    bot.AddValue(labels[value].getMast(), labels[value].getValue());
             }
             else if (value < 0)
             {
                 if (value == -1)
-                    container.add(GUI.button1);
-                else container.add(GUI.button2);
+                    container.add(button1);
+                else container.add(button2);
             }
             if (value > 0)
                 container.add(labels[value]);
         }
         labels[layout_indexes[(6*2 - 1) * 2]].setText("Осталось 24 карты");
     }
-    // метод, производящий вытягивание случайной оставшейся карты из колоды в нужный момент времени
-    public void delivering_cards(int i, int n_b1, int n_b2)
+
+    public void PassCards(int index, int step)
     {
+        labels[index].setMast(labels[layout_indexes[42] + step].getMast());
+        labels[index].setValue(labels[layout_indexes[42] + step].getValue());
+        labels[index].setIcon(labels[layout_indexes[42] + step].getIcon());
+        labels[layout_indexes[42] + step].NullCard();
+        labels[index].setVisible(false);
+    }
+
+    // метод, производящий вытягивание случайной оставшейся карты из колоды в нужный момент времени
+    public void delivering_cards(int i, int n_b1, int n_b2) throws IOException {
         int n_c1 = 0, n_c2 = 0;
         if ((labels[i].getIcon() == null) && (((i > 6) && (n_b1 == 0)) || ((i < 7) && (n_b2 == 0))))// выдача карт из колоды в случае отсутствия доп.карт и у игрока, и у бота
         {
-            if (!GL.queue.koloda_empty)
+            if (!GL.isKoloda_empty())
             {
-                if (GL.queue.n_koloda > 1) // если в колоде пока больше 1 карты
+                if (GL.getN_koloda() > 1) // если в колоде пока больше 1 карты
                 {
                     int k;
                     do
@@ -102,60 +114,48 @@ public class GUI extends JFrame {
                                 labels[i].setIcon(new ImageIcon("src/Cards/front.jpg"));
                             else labels[i].setIcon(img[k]);
                             labels[i].setVisible(true);
-                            GL.cards[i].M(k % 4);
-                            GL.cards[i].V(k / 4);
+                            labels[i].setMast(k % 4);
+                            labels[i].setValue(k / 4);
+                            labels[i].setIcon(img[k]);
                             if ((labels[i].GetTag() == null) && ((i < 13) || ((i > 27) && (i < 40))))
                             {
                                 Index index = new Index();
-                                index.I = i;
+                                index.setI(i);
                                 labels[i].SetTag(index);
                             }
                         }
                     }
                     while (!img_pos[k]);
                     img_pos[k] = false;
-                    GL.queue.n_koloda--;
-                    if (GL.queue.n_koloda > 1)
-                        labels[layout_indexes[(6*2 - 1) * 2]].setText("Осталось " + Integer.toString(GL.queue.n_koloda) + " карт(ы)");
+                    GL.setN_koloda(GL.getN_koloda() - 1);
+                    if (GL.getN_koloda() > 1)
+                        labels[layout_indexes[(6*2 - 1) * 2]].setText("Осталось " + Integer.toString(GL.getN_koloda()) + " карт(ы)");
                     else
                         labels[layout_indexes[(6*2 - 1) * 2]].setText("Карты в колоде закончились");
                 }
-                else if (GL.queue.n_koloda == 1) // если в колоде осталась 1 карта (а именно та, которая нарисована на экране)
+                else if (GL.getN_koloda() == 1) // если в колоде осталась 1 карта (а именно та, которая нарисована на экране)
                 {
-                    labels[i].setIcon(labels[layout_indexes[(6*2 - 1) * 2 + 1]].getIcon());
-                    labels[i].setVisible(true);
-                    GL.cards[i].M(GL.cards[layout_indexes[(6*2 - 1) * 2 + 1]].M());
-                    GL.cards[i].V(GL.cards[layout_indexes[(6*2 - 1) * 2 + 1]].V());
-                    GL.queue.koloda_empty = true;
-                    labels[layout_indexes[(6*2 - 1) * 2 + 1]].setVisible(false);
+                    PassCards((6*2 - 1) * 2 + 1, 0);
+                    GL.setKoloda_empty(true);
                 }
             }
         }
         else if ((labels[i] != null) && (!labels[i].isVisible()) && (n_b1 > 0) && (i > 6)) // выдача карт игроку в случае присутствия доп.карт у игрока
         {
-            labels[i].setIcon(labels[layout_indexes[42] + n_c1].getIcon()); // n_c1 - инкремент прохода по доп.картам игрока
-            labels[i].setVisible(true);
-            GL.cards[i].M(GL.cards[layout_indexes[42] + n_c1].M());
-            GL.cards[i].V(GL.cards[layout_indexes[42] + n_c1].V());
-            labels[layout_indexes[42] + n_c1].setIcon(null);
-            GL.cards[layout_indexes[42] + n_c1].M(-1);
-            GL.cards[layout_indexes[42] + n_c1].V(-1);
+            // n_c1 - инкремент прохода по доп.картам игрока
+            PassCards(42, n_c1);
             n_b1 -= 1;
             n_c1 += 1;
         }
         else if ((labels[i] != null) && (!labels[i].isVisible()) && (n_b2 > 0) && (i < 7)) // выдача карт боту в случае присутствия доп.карт у бота
         {
-            labels[i].setIcon(labels[layout_indexes[6] + n_c2].getIcon()); // n_c2 - инкремент прохода по доп.картам бота
-            labels[i].setVisible(true);
-            GL.cards[i].M(GL.cards[layout_indexes[6] + n_c2].M());
-            GL.cards[i].V(GL.cards[layout_indexes[6] + n_c2].V());
-            labels[layout_indexes[6] + n_c2].setIcon(null);
-            GL.cards[layout_indexes[6] + n_c2].M(-1);
-            GL.cards[layout_indexes[6] + n_c2].V(-1);
+            // n_c2 - инкремент прохода по доп.картам бота
+            PassCards(6, n_c2);
             n_b2 -= 1;
             n_c2 += 1;
         }
     }
+
     // Действия, когда игрок нажимает кнопку "Бито"
     class Button1EventListener implements ActionListener
     {
@@ -175,43 +175,48 @@ public class GUI extends JFrame {
                 if (labels[i - 6].getIcon() != null) n_b2 += 1; // подсчёт доп.карт бота
             }
             for (i = 15; i < 27; i++) // очистка карт на столе
-            {
-                labels[i].setIcon(null);
-                GL.cards[i].M(-1);
-                GL.cards[i].V(-1);
-            }
+                labels[i].NullCard();
+
             for (i = 1; i < 13; i++) // повторная выдача недостающих карт игроку и боту
             {
-                delivering_cards(i, n_b1, n_b2);
+                try {
+                    delivering_cards(i, n_b1, n_b2);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
             }
-            for (int step = 0; step < 7; step += 6) // цикл для постепенного перетаскивания доп.карт на слоты, ближние к левому краю экрана
+            for (int step = 0; step < 7; step += 6) // цикл для постепенного перетаскивания доп.карт на слоты, ближние к левому краю экрана (очищение доп.слотов от избыточных карт)
                 for (i = layout_indexes[11]; i > layout_indexes[6]; i--)
                 {
                     if ((labels[i + step].getIcon() != null) && (labels[i + step- 1].getIcon() == null))
                     {
+                        // Оптимизация кода!
+                        labels[i + step - 1].setMast(labels[i + step].getMast());
+                        labels[i + step - 1].setValue(labels[i + step].getValue());
                         labels[i + step- 1].setIcon(labels[i + step].getIcon());
-                        labels[i + step].setIcon(null);
-                        GL.cards[i + step - 1].M(GL.cards[i + step].M());
-                        GL.cards[i + step - 1].V(GL.cards[i + step].V());
-                        GL.cards[i + step].M(-1);
-                        GL.cards[i + step].V(-1);
+                        labels[i + step].NullCard();
                     }
                 }
             for (i = 0; i < 6; i++) // обнуление списка значений величин карт на столе
             {
-                GL.queue.player_values[i] = -1;
-                GL.queue.bot_values[i] = -1;
+                GL.player_values[i] = -1;
+                GL.bot_values[i] = -1;
             }
-            GL.queue.hod(GL.queue.hod() * -1);
-            GL.queue.sbros(GL.queue.sbros() * -1);
+            GL.hod(GL.hod() * -1);
+            GL.sbros(GL.sbros() * -1);
             if (labels[14].getIcon() == arrow[0]) // стрелка хода переворачивается при смене хода с игрока на бота
                 labels[14].setIcon(arrow[1]);
             else
                 labels[14].setIcon(arrow[0]);
             // После нажатия кнопки "Бито" бот начинает свой ход
             BotValues card = null;
-            if ((GL.queue.sbros() == -1) && (GL.queue.hod() == -1))
-                GL.bot.Bito();
+            if ((GL.sbros() == -1) && (GL.hod() == -1)) {
+                try {
+                    card = GL.bot.Bito(card);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
             int k = 15;
             int n = 1;
             if (card != null)
@@ -225,6 +230,7 @@ public class GUI extends JFrame {
             //else button1.doClick();
         }
     }
+
     // Действия, когда игрок нажимает кнопку "Беру"
     class Button2EventListener implements ActionListener {
         @Override
@@ -242,46 +248,56 @@ public class GUI extends JFrame {
                     n_b2 += 1;
             for (int i = 1; i < 7; i++) // выдача карт боту (в случае когда игрок берет карты, ему из колоды, соответственно, выдавать ничего не нужно)
             {
-                delivering_cards(i, n_b1, 0);
+                try {
+                    delivering_cards(i, n_b1, 0);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
             }
-            for (int i = 7; i < 13; i++)
-                delivering_cards(i, 0, n_b2);
+            for (int i = 7; i < 13; i++) {
+                try {
+                    delivering_cards(i, 0, n_b2);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
             int step = 2 * layout_indexes[42] - layout_indexes[12]; // вычисляемый шаг для сопоставления картам на столе слотов для доп.карт у игрока
             for (int i = layout_indexes[12]; i <= layout_indexes[17]; i += 2) // игрок берет карты бота со стола к себе в доп.карты
             {
-                GL.queue.n_pictures += 1;
+                GL.setN_pictures(GL.getN_pictures() + 1);
                 labels[((i + step) / 2) + n_b1].setIcon(labels[i].getIcon());
                 labels[((i + step) / 2) + n_b1].addMouseListener(new LabelClicker());
                 Index index = new Index();
-                index.I = ((i + step) / 2 + n_b1);
+                index.setI((i + step) / 2 + n_b1);
                 labels[((i + step) / 2) + n_b1].SetTag(index);
-                if (GL.cards[(i + step) / 2 + n_b1] == null)
-                    GL.cards[(i + step) / 2 + n_b1] = new card();
-                GL.queue.n_pictures += 1;
-                GL.cards[(i + step) / 2 + n_b1].M(GL.cards[i].M());
-                GL.cards[(i + step) / 2 + n_b1].V(GL.cards[i].V());
-                GL.cards[i].M(-1);
-                GL.cards[i].V(-1);
-                labels[i].setIcon(null);
+                GL.setN_pictures(GL.getN_pictures() + 1);
+                labels[(i + step) / 2 + n_b1].setMast(labels[i].getMast());
+                labels[(i + step) / 2 + n_b1].setValue(labels[i].getValue());
+                labels[i].NullCard();
             }
-            for (int i = 0; i < GL.queue.player_values.length; i++) // обнуление списка значений величин карт на столе
+            for (int i = 0; i < GL.player_values.length; i++) // обнуление списка значений величин карт на столе
             {
-                GL.queue.player_values[i] = -1;
-                GL.queue.bot_values[i] = -1;
+                GL.player_values[i] = -1;
+                GL.bot_values[i] = -1;
             }
-            for (int i = 1; i < GL.cards.length; i++) // взаимодействие с массивами карт, которые располагаются на столе
+            for (int i = 1; i < labels.length; i++) // взаимодействие с массивами карт, которые располагаются на столе
             {
                 if (((i >= layout_indexes[24]) && (i <= layout_indexes[29])) || ((i >= layout_indexes[12]) && (i <= layout_indexes[17]))) {
-                    GL.cards[i].En(true);
-                    labels[i].setIcon(null);
+                    labels[i].setEnabled(true);
+                    labels[i].NullCard();
                 }
             }
-            if (GL.queue.sbros() != GL.queue.hod())
-                GL.queue.sbros(GL.queue.hod());
+            if (GL.sbros() != GL.hod())
+                GL.sbros(GL.hod());
             // После нажатия кнопки "Беру" бот начинает свой ход (продолжая прошлый ход)
             BotValues card = null;
-            if ((GL.queue.sbros() == -1) && (GL.queue.hod() == -1))
-                GL.bot.Bito();
+            if ((GL.sbros() == -1) && (GL.hod() == -1)) {
+                try {
+                    card = GL.bot.Bito(card);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
             int n = 1;
             int k = 15;
             if (card != null) {
@@ -294,6 +310,17 @@ public class GUI extends JFrame {
             //else button1.doClick();
         }
     }
+    public void PassLabels(int k, int index)
+    {
+        labels[k].setIcon(labels[index].getIcon());
+        GL.setN_pictures(GL.getN_pictures() + 1);
+        labels[k].setEnabled(false);
+        labels[k].setMast(labels[index].getMast());
+        labels[k].setValue(labels[index].getValue());
+        GL.player_values[(k-15) / 2] = labels[k].getValue();
+        labels[index].NullCard();
+        GL.sbros(GL.sbros() * -1);
+    }
     // Карты игрока (а именно карты с 7 по 12 по раскладке) имеют событие клика.
     // Также событие клика будет появляться у карт, которые игрок будет брать у бота и помещать в дополнительные слоты 34-39)
     class LabelClicker implements MouseListener
@@ -302,7 +329,7 @@ public class GUI extends JFrame {
         public void mouseClicked(MouseEvent e)
         {
             CustomLabel p = (CustomLabel) e.getSource();
-            int index = ((Index) (p.GetTag())).I; // получение индекса нажатой карты
+            int index = ((Index) (p.GetTag())).getI(); // получение индекса нажатой карты
             int k = layout_indexes[24];
             boolean go = true; // переменная go - отвечает за подкидывание карт на стол
             while ((labels[k].getIcon() != null) && (index > 6))
@@ -310,10 +337,10 @@ public class GUI extends JFrame {
                 k += 2;
                 go = false;
             }
-            for (int i = 0; i < GL.queue.player_values.length; i++) // определяется возможность подкидывания карт на стол
+            for (int i = 0; i < GL.player_values.length; i++) // определяется возможность подкидывания карт на стол
             {
-                if (GL.queue.hod() == 1)
-                    if ((GL.cards[index].V() == GL.queue.player_values[i]) || (GL.cards[index].V() == GL.queue.bot_values[i]))
+                if (GL.hod() == 1)
+                    if ((labels[index].getValue() == GL.player_values[i]) || (labels[index].getValue() == GL.bot_values[i]))
                     {
                         go = true;
                         break;
@@ -323,43 +350,29 @@ public class GUI extends JFrame {
                 //go = true;
 
             }
-            if ((go) || (GL.queue.hod() == GL.queue.sbros()))
-                GL.queue.sbros(GL.queue.sbros() * -1);// бот начинает биться (во время хода игрока)
-            if (GL.queue.hod() == 1) // если ходит игрок
+            if ((go) || (GL.hod() == GL.sbros()))
+                GL.sbros(GL.sbros() * -1);// бот начинает биться (во время хода игрока)
+            if (GL.hod() == 1) // если ходит игрок
             {
                 if (go) // если можно подкидывать карты
                 {
-                    labels[k].setIcon(labels[index].getIcon());
-                    GL.queue.n_pictures += 1;
-                    GL.cards[k].En(false);
-                    GL.cards[k].M(GL.cards[index].M());
-                    GL.cards[k].V(GL.cards[index].V());
-                    GL.queue.player_values[(k-15) / 2] = GL.cards[k].V();
-                    labels[index].setIcon(null);
-                    GL.queue.sbros(GL.queue.sbros() * -1);
+                    PassLabels(k,index);
                     button2.setVisible(true);
                     button1.setVisible(false);
                 }
             }
             else // если ходит бот
             {
-                if ((GL.queue.sbros() == 1) || go) // если игрок бьется, queue.sbros = 1 отвечает за возможность скидывания на стол карт игрока, queue.sbros = -1 - карт бота
-                    if (((GL.cards[k + 1].M() == GL.cards[index].M()) && (GL.cards[index].V() > GL.cards[k + 1].V()))
-                            || ((GL.cards[index].M() == GL.bot.M_K) && (GL.cards[k + 1].M() != GL.bot.M_K)))
+                if ((GL.sbros() == 1) || go) // если игрок бьется, queue.sbros = 1 отвечает за возможность скидывания на стол карт игрока, queue.sbros = -1 - карт бота
+                    if (((labels[k + 1].getMast() == labels[index].getMast()) && (labels[index].getValue() > labels[k + 1].getValue()))
+                            || ((labels[index].getMast() == GL.bot.getM_K()) && (labels[k + 1].getMast() != GL.bot.getM_K())))
                     {
-                        labels[k].setIcon(labels[index].getIcon());
-                        GL.queue.n_pictures += 1;
-                        GL.cards[k].En(false);
-                        GL.cards[k].M(GL.cards[index].M());
-                        GL.cards[k].V(GL.cards[index].V());
-                        GL.queue.player_values[(k - 15) / 2] = GL.cards[k].V(); // заполнение массива карт игрока, скинутых на поле
-                        labels[index].setIcon(null);
-                        GL.queue.sbros(GL.queue.sbros() * -1);
+                        PassLabels(k ,index);
                         for (int i = 0; i < 6; i++) // если у бота появляется непобитая им карта
                         {
-                            if ((GL.queue.player_values[i] > -1) && (GL.queue.bot_values[i] == -1))
+                            if ((GL.player_values[i] > -1) && (GL.bot_values[i] == -1))
                             {
-                                GL.queue.sbros(GL.queue.sbros() * -1);
+                                GL.sbros(GL.sbros() * -1);
                                 break;
                             }
                         }
@@ -367,9 +380,9 @@ public class GUI extends JFrame {
                         button2.setVisible(false);
                     }
             }
-            if ((GL.queue.hod() == 1) && (GL.queue.sbros() == -1))
+            if ((GL.hod() == 1) && (GL.sbros() == -1))
             {
-                GL.bot.AddEnemyValue(GL.cards[k].M(), GL.cards[k].V());
+                GL.bot.AddEnemyValue(labels[k].getMast(), labels[k].getValue());
                 int n = GL.bot.values.size();
                 /*BotValues card = bot.Bito();
                 if (card != null)
@@ -378,9 +391,7 @@ public class GUI extends JFrame {
                     labels[n--].setVisible(false);
                     button1.setVisible(true);
                     button2.setVisible(false);
-                }
-
-                 */
+                } */
             }
         }
         @Override
@@ -391,25 +402,69 @@ public class GUI extends JFrame {
     }
 }
 
-
-
 class CustomLabel extends JLabel
 {
-    public int g;
     private Object Tag;
-    public Object GetTag()
-    {
+    private File f;
+    public Object GetTag() {
         return Tag;
     }
-    public void SetTag(Object Tag)
-    {
+    public void SetTag(Object Tag) {
         this.Tag = Tag;
+    }
+    public int getMast() {
+        return Mast;
+    }
+    public void setMast(int mast) {
+        Mast = mast;
+    }
+    private int Mast;
+    public int getValue() {
+        return Value;
+    }
+    public void setValue(int value) {
+        Value = value;
+    }
+    private int Value;
+    public void setIcon(ImageIcon icon){
+        this.icon = icon;
+    }
+    private ImageIcon icon;
+    @Override
+    public boolean isEnabled() {
+        return Enabled;
+    }
+    @Override
+    public void setEnabled(boolean enabled) {
+        Enabled = enabled;
+    }
+    private boolean Enabled;
+
+    public CustomLabel()
+    {
+        this.Mast = -1;
+        this.Value = -1;
+        this.icon = null;
+        this.Tag = null;
+        this.f = null;
+    }
+    public void NullCard()
+    {
+        this.Mast = -1;
+        this.Value = -1;
+        this.setIcon(null);
     }
 }
 
 class Index
 {
-    public int I;
+    public void setI(int i) {
+        I = i;
+    }
+    public int getI() {
+        return I;
+    }
+    private int I;
 }
 
 
