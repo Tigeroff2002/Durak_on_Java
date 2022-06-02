@@ -12,7 +12,6 @@ public class Game
             { 1, 2, 3, 4, 5, 6, 28, 29, 30, 31, 32, 33, 16, 18, 20, 22, 24, 26, 40, 41, 42, 43, 44, 13,
                     15, 17, 19, 21, 23, 25, 45, 46, 47, -1, -2, 14, 7,  8, 9, 10, 11, 12, 34, 35, 36, 37, 38, 39 };
     // раскладка карт на столе (визуальное представление доступно в папке Cards под названием layout.jpg)
-    public Bot bot;
     public int getN_pictures() {
         return n_pictures;
     }
@@ -37,13 +36,18 @@ public class Game
     private int Sbros;
     private int Hod;
     private int Winner;
+    public int getM_K() {
+        return M_K;
+    }
+    public void setM_K(int m_K) {
+        M_K = m_K;
+    }
+    private int M_K;
     private static String path;
     public Game() {
         // Инициализация параметров игры
         InitGame();
         // Создание экземпляра бота
-        bot = new Bot();
-        bot.setM_K(GUI.labels[layout_indexes[(6*2 - 1) * 2 + 1]].getMast()); // установка козырной масти
     }
     public void InitGame()
     {
@@ -118,40 +122,23 @@ class Bot {
         M_K = m_K;
     }
     private static int M_K;
+    private BotValues card;
+    private BotValues encard;
+    private BotValues returned_card;
     ArrayList<BotValues> values = new ArrayList<>();
     ArrayList<BotValues> envalues = new ArrayList<>();
+    ArrayList<BotValues> playervalues = new ArrayList<>();
     public void AddValue(int M, int V)
     {
-        BotValues value = new BotValues(M, V);
-        values.add(value);
+        values.add(new BotValues(M,V));
     }
-
     public void AddEnemyValue(int M, int V)
     {
-        BotValues value = new BotValues(M, V);
-        envalues.add(value);
+        envalues.add(new BotValues(M, V));
     }
-    public BotValues Bito_Card() // бот отбивается, метод возвращает выбранную им карту, которой он будет биться
+    public void AddPlayerValue(int M, int V)
     {
-        BotValues returned_card = null;
-        Collections.sort(values, COMPARE_BY_VALUE);
-        for (int i = 0; i < envalues.size(); i++)
-        {
-            BotValues encard = envalues.get(i);
-            for (int j = 0; j < values.size(); j++)
-            {
-                BotValues card = values.get(j);
-                if (((card.getMast() != M_K) && (card.getMast() == encard.getMast()) && (card.getValue() > encard.getValue())) || ((card.getMast() == M_K)
-                        && (encard.getMast() != M_K || (card.getValue() > encard.getValue()))))
-                {
-                    envalues.remove(i);
-                    values.remove(j);
-                    returned_card = card;
-                    break;
-                }
-            }
-        }
-        return returned_card;
+        playervalues.add(new BotValues(M,V));
     }
     public boolean Podkid_Possible() // бот подкидывает карту на стол в случае, если это возможно, метод возвращает возможность
     {
@@ -167,15 +154,29 @@ class Bot {
         }
         return go;
     }
-    public BotValues Hod_Card()
+    public BotValues Bito_Card() // бот отбивается, метод возвращает выбранную им карту, которой он будет биться
     {
-        BotValues returned_card = null;
-        Collections.sort(values, COMPARE_BY_VALUE);
-        returned_card = values.get(0);
-        values.remove(0);
+        returned_card = null;
+        values.sort(COMPARE_BY_VALUE);
+        for (int i = 0; i < 1; i++)
+        {
+            encard = envalues.get(i);
+            for (int j = 0; j < values.size(); j++)
+            {
+                card = values.get(j);
+                if (((card.getMast() != M_K) && (card.getMast() == encard.getMast()) && (card.getValue() > encard.getValue())) || ((card.getMast() == M_K)
+                        && (encard.getMast() != M_K || (card.getValue() > encard.getValue()))))
+                {
+                    returned_card = card;
+                    envalues.remove(i);
+                    values.remove(j);
+                    break;
+                }
+            }
+        }
         return returned_card;
     }
-    public BotValues Bito(BotValues card) throws IOException {
+    public BotValues Bito()  {
         int k = 15;
         int n = 1;
         card = Bito_Card();
@@ -191,9 +192,17 @@ class Bot {
         return card;
         //else button1.doClick();
     }
-    public void Beru()
+    public BotValues Hod_Card()
     {
-        BotValues card = null;
+        returned_card = null;
+        values.sort(COMPARE_BY_VALUE);
+        returned_card = values.get(0);
+        values.remove(0);
+        return returned_card;
+    }
+    public void Hod()
+    {
+        card = null;
         card = Hod_Card();
         if (Podkid_Possible())
             card = Hod_Card();
