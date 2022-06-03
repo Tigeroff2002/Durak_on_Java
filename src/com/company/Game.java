@@ -1,4 +1,6 @@
 package com.company;
+import com.sun.jdi.Value;
+
 import javax.swing.ImageIcon;
 import java.io.*;
 import java.io.IOException;
@@ -94,16 +96,14 @@ public class Game
         this.Sbros *= -1;
         this.Hod *= -1;
     }
-    public void InverseHod(int Hod)
+    public void InverseHod()
     {
-        this.Hod = Hod * -1;
+        this.Hod = this.Hod * -1;
     }
-    public void InverseSbros(int Sbros)
+    public void InverseSbros()
     {
-        this.Sbros = Sbros * -1;
+        this.Sbros = this.Sbros * -1;
     }
-    public int[] player_values = new int[] { -1, -1, -1, -1, -1, -1 };
-    public int[] bot_values = new int[] { -1, -1, -1, -1, -1, -1 };
 }
 
 /* класс, представляющий ИИ программы. Бот имеет список своих карт (т.е. тех, которые у него в руке), и список карт врага (которые находятся на столе).
@@ -126,6 +126,7 @@ class Bot {
     private BotValues encard;
     private BotValues returned_card;
     ArrayList<BotValues> values = new ArrayList<>();
+    ArrayList<BotValues> botvalues = new ArrayList<>();
     ArrayList<BotValues> envalues = new ArrayList<>();
     ArrayList<BotValues> playervalues = new ArrayList<>();
     public void AddValue(int M, int V)
@@ -140,25 +141,57 @@ class Bot {
     {
         playervalues.add(new BotValues(M,V));
     }
-    public boolean Podkid_Possible() // бот подкидывает карту на стол в случае, если это возможно, метод возвращает возможность
+    public void AddBotValue(int M, int V)
     {
-        boolean go = false;
+        botvalues.add(new BotValues(M, V));
+    }
+    public BotValues PodkidtoPlayer() // бот подкидывает карту на стол в случае, если это возможно, метод возвращает возможность
+    {
+        returned_card = null;
         for (int i = 0; i < envalues.size(); i++)
         {
-            BotValues card = values.get(i);
-            if ((card.getValue() == envalues.get(i).getValue()) || (card.getValue() == values.get(i).getValue()))
+            card = envalues.get(i);
+            for (int j = 0; j < values.size(); j++)
             {
-                go = true;
-                break;
+               card = values.get(j);
+               if (card.getValue() == encard.getValue())
+               {
+                   returned_card = card;
+                   values.remove(j);
+                   break;
+               }
             }
         }
-        return go;
+        return returned_card;
+    }
+    private boolean podkidtobot;
+    public boolean PodkidtoBot(int value) // бот подкидывает карту на стол в случае, если это возможно, метод возвращает возможность
+    {
+        podkidtobot = false;
+        if (envalues.size() + playervalues.size() == 0)
+            podkidtobot = true;
+        else
+        {
+            for (int i = 0; i < envalues.size(); i++)
+                if (value == envalues.get(i).getValue())
+                {
+                    podkidtobot = true;
+                    break;
+                }
+            for (int i = 0; i < playervalues.size(); i++)
+                if (value == playervalues.get(i).getValue())
+                {
+                    podkidtobot = true;
+                    break;
+                }
+        }
+        return podkidtobot;
     }
     public BotValues Bito_Card() // бот отбивается, метод возвращает выбранную им карту, которой он будет биться
     {
         returned_card = null;
         values.sort(COMPARE_BY_VALUE);
-        for (int i = 0; i < 1; i++)
+        for (int i = 0; i < envalues.size(); i++)
         {
             encard = envalues.get(i);
             for (int j = 0; j < values.size(); j++)
@@ -204,9 +237,6 @@ class Bot {
     {
         card = null;
         card = Hod_Card();
-        if (Podkid_Possible())
-            card = Hod_Card();
-        GUI.button2.doClick();
     }
 
     public static final Comparator<BotValues> COMPARE_BY_VALUE = new Comparator<BotValues>() {
