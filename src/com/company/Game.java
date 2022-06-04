@@ -1,5 +1,4 @@
 package com.company;
-import com.sun.jdi.Value;
 
 import javax.swing.ImageIcon;
 import java.io.*;
@@ -7,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 
 public class Game
 {
@@ -148,9 +148,11 @@ class Bot {
     public BotValues PodkidtoPlayer() // бот подкидывает карту на стол в случае, если это возможно, метод возвращает возможность
     {
         returned_card = null;
-        for (int i = 0; i < envalues.size(); i++)
+        for (int i = 0; i < envalues.size() + botvalues.size(); i++)
         {
-            card = envalues.get(i);
+            if (i < envalues.size())
+                encard = envalues.get(i);
+            else encard = botvalues.get(i - envalues.size());
             for (int j = 0; j < values.size(); j++)
             {
                card = values.get(j);
@@ -209,22 +211,7 @@ class Bot {
         }
         return returned_card;
     }
-    public BotValues Bito()  {
-        int k = 15;
-        int n = 1;
-        card = Bito_Card();
-        if (card != null)
-        {
-            GUI.labels[k + 1].setIcon(new ImageIcon("src/Cards/" + Integer.toString(4 * card.getValue() + card.getMast()) + ".jpg"));
-            GUI.labels[n++].setVisible(false);
-            GUI.button2.setVisible(true);
-            GUI.button1.setVisible(false);
-            k += 2;
-            GUI.button1.doClick();
-        }
-        return card;
-        //else button1.doClick();
-    }
+
     public BotValues Hod_Card()
     {
         returned_card = null;
@@ -232,11 +219,6 @@ class Bot {
         returned_card = values.get(0);
         values.remove(0);
         return returned_card;
-    }
-    public void Hod()
-    {
-        card = null;
-        card = Hod_Card();
     }
 
     public static final Comparator<BotValues> COMPARE_BY_VALUE = new Comparator<BotValues>() {
