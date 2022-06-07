@@ -129,8 +129,9 @@ public class GUI extends JFrame {
                     while (!img_pos[i_rand]);
                     img_pos[i_rand] = false;
                     // уменьшение количества карт в колоде во всех случаев, кроме карты, отображаемой на экране
-                    if (i != 13)
+                    if (i != 13) {
                         GL.setN_koloda(GL.getN_koloda() - 1);
+                    }
                     // вывод информации о количестве карт в колоде
                     if (GL.getN_koloda() > 1)
                         labels[layout_indexes[22]].setText("Осталось " + Integer.toString(GL.getN_koloda()) + " карт(ы)");

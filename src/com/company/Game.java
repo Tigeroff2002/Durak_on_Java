@@ -11,6 +11,10 @@ public class Game {
         return n_pictures;
     }
     private static final int n_pictures = 36;
+    public int[] layout_indexes = new int[]
+            { 1, 2, 3, 4, 5, 6, 28, 29, 30, 31, 32, 33, 16, 18, 20, 22, 24, 26, 40, 41, 42, 43, 44, 13,
+                    15, 17, 19, 21, 23, 25, 45, 46, 47, -1, -2, 14, 7,  8, 9, 10, 11, 12, 34, 35, 36, 37, 38, 39 };
+    // раскладка карт на столе (визуальное представление доступно в папке Cards под названием layout.jpg)
     public int getN_koloda() {
         return n_koloda;
     }
@@ -33,7 +37,8 @@ public class Game {
         InitGame();
     }
     // Инициализация параметров игры
-    public void InitGame() {
+    public void InitGame()
+    {
         this.n_koloda = getN_pictures();
         this.koloda_empty = false;
         this.Sbros = 1;
