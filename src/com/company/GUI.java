@@ -25,11 +25,12 @@ public class GUI extends JFrame {
     private static String [] dirs = new String [] {"down", "up"};
     private static File f;
     private static boolean go;
-    Game GL;
-    Bot bot;
-    BotValues card;
-    int n,k;
-    Index index;
+    protected static Game GL;
+    protected static Bot bot;
+    protected static BotValues card;
+    protected int n;
+    protected int k;
+    protected static Index index;
     public GUI() throws IOException {
         super("Дурак (подкидной) ");
         Container container = this.getContentPane();
@@ -97,7 +98,7 @@ public class GUI extends JFrame {
         labels[index].setValue(labels[layout_indexes[42] + step].getValue());
         labels[index].setIcon(labels[layout_indexes[42] + step].getIcon());
         labels[layout_indexes[42] + step].NullCard();
-        labels[index].setVisible(false);
+        labels[index].setIcon(null);
     }
     // метод, производящий вытягивание случайной оставшейся карты из колоды в нужный момент времени
     public void delivering_cards(int i, int n_b1, int n_b2) throws IOException {
@@ -138,7 +139,7 @@ public class GUI extends JFrame {
                     img_pos[i_rand] = false;
                     GL.setN_koloda(GL.getN_koloda() - 1);
                     if (GL.getN_koloda() > 1)
-                        labels[layout_indexes[22]].setText("Осталось " + Integer.toString(GL.getN_pictures()) + " карт(ы)");
+                        labels[layout_indexes[22]].setText("Осталось " + Integer.toString(GL.getN_koloda()) + " карт(ы)");
                     else
                         labels[layout_indexes[22]].setText("Карты в колоде закончились");
                 }
@@ -352,7 +353,6 @@ public class GUI extends JFrame {
     public void ThrowCardPlayer(int k, int index)
     {
         labels[k].setIcon(labels[index].getIcon());
-        GL.setN_pictures(GL.getN_pictures() + 1);
         labels[k].setEnabled(false);
         labels[k].setMast(labels[index].getMast());
         labels[k].setValue(labels[index].getValue());
