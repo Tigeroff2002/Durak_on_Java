@@ -14,14 +14,11 @@ public class Game
             { 1, 2, 3, 4, 5, 6, 28, 29, 30, 31, 32, 33, 16, 18, 20, 22, 24, 26, 40, 41, 42, 43, 44, 13,
                     15, 17, 19, 21, 23, 25, 45, 46, 47, -1, -2, 14, 7,  8, 9, 10, 11, 12, 34, 35, 36, 37, 38, 39 };
     // раскладка карт на столе (визуальное представление доступно в папке Cards под названием layout.jpg)
-    public int getN_pictures() {
+    private final static int n_pictures = 36;
+    public void getN_pictures() {
         return n_pictures;
     }
-    public void setN_pictures(int n_pictures) {
-        this.n_pictures = n_pictures;
-    }
-    private int n_pictures;
-    public int getN_koloda() {
+    public void getN_koloda() {
         return n_koloda;
     }
     public void setN_koloda(int n_koloda) {
@@ -53,8 +50,7 @@ public class Game
     }
     public void InitGame()
     {
-        this.n_pictures = 12;
-        this.n_koloda = 36;
+        this.n_koloda = getN_pictures();
         this.koloda_empty = false;
         this.Sbros = 1;
         this.Hod = 1;
