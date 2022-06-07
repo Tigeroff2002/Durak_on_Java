@@ -9,16 +9,17 @@ import java.io.IOException;
 public class Main {
     public static void main(String[] args)
     {
+        // запуск меню игры
         Window app = new Window("Дурак (меню)", "Играть");
         app.setVisible(true);
     }
 }
 
+// класс - меню игры
 class Window extends JFrame {
     private static String Super;
     private static String text;
-    public Window(String Super, String text)
-    {
+    public Window(String Super, String text) {
         super(Super);
         Container container = this.getContentPane();
         this.setResizable(false);
@@ -39,13 +40,15 @@ class Button0EventListener implements ActionListener
     @Override
     public void actionPerformed(ActionEvent e)
     {
+        // запуск игры
         GUI app1 = null;
         try {
             app1 = new GUI();
-        } catch (IOException ex) {
+            app1.setVisible(true);
+        }
+        catch (IOException ex) {
             ex.printStackTrace();
         }
-        app1.setVisible(true);
     }
 }
 
