@@ -1,20 +1,20 @@
 package com.company;
 
-import java.io.*;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 
 // класс, представляющий игровую логику
 public class Game {
+    // кол-во карт в колоде
     public int getN_pictures() {
         return n_pictures;
     }
-    private static final int n_pictures = 36;
-    public int[] layout_indexes = new int[]
-            { 1, 2, 3, 4, 5, 6, 28, 29, 30, 31, 32, 33, 16, 18, 20, 22, 24, 26, 40, 41, 42, 43, 44, 13,
-                    15, 17, 19, 21, 23, 25, 45, 46, 47, -1, -2, 14, 7,  8, 9, 10, 11, 12, 34, 35, 36, 37, 38, 39 };
-    // раскладка карт на столе (визуальное представление доступно в папке Cards под названием layout.jpg)
+    private static final int n_pictures = 16;
+    public int getN_pictures_hand()
+    {
+        return n_pictures_hand;
+    }
+    private static final int n_pictures_hand = 6;
     public int getN_koloda() {
         return n_koloda;
     }
@@ -31,8 +31,13 @@ public class Game {
     private boolean koloda_empty;
     private int Sbros;
     private int Hod;
+    public int getWinner() {
+        return Winner;
+    }
+    public void setWinner(int winner) {
+        Winner = winner;
+    }
     private int Winner;
-    private final static String path = "src/output/output.txt";
     public Game() {
         InitGame();
     }
@@ -44,25 +49,6 @@ public class Game {
         this.Sbros = 1;
         this.Hod = 1;
         this.Winner = 0;
-    }
-    protected static String text;
-    // Действия при окончании игры
-    public void EndGame() {
-        if ((n_pictures == 36) && (koloda_empty))
-            Winner = Sbros;
-        if (Winner == 1)
-            text = "Игрок выиграл";
-        else text = "Игрок проиграл";
-        // работа с потоом вывода данных в файл
-        try (FileWriter writer = new FileWriter(path, true)) {
-            writer.write(text);
-        }
-        catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-        // вызов меню окончания игры
-        Window app_end = new Window("Дурак (конец игры)", text);
-        app_end.setVisible(true);
     }
     public void sbros (int Sbros)
     {
@@ -124,7 +110,16 @@ class Bot {
     {
         botvalues.add(new Values(M, V));
     }
-
+    public int getN_masts()
+    {
+        return n_masts;
+    }
+    private static final int n_masts = 4;
+    public int getN_values()
+    {
+        return n_values;
+    }
+    private static final int n_values = 9;
     // бот подкидывает карту на стол в случае, если это возможно, метод возвращает возможность
     public Values PodkidtoPlayer() {
         returned_card = null;
@@ -134,7 +129,7 @@ class Bot {
             else encard = botvalues.get(i - envalues.size());
             for (int j = 0; j < values.size(); j++) {
                card = values.get(j);
-               if (card.getValue() == encard.getValue()) {
+               if ((card.getValue() == encard.getValue()) && (card.getMast() != encard.getMast())) {
                    returned_card = card;
                    values.remove(j);
                    break;
@@ -144,33 +139,32 @@ class Bot {
         return returned_card;
     }
 
-    protected boolean podkidtobot;
     // бот подкидывает карту на стол в случае, если это возможно, метод возвращает возможность
-    public boolean PodkidtoBot(int value)
-    {
-        podkidtobot = false;
-        if (envalues.size() + playervalues.size() == 0)
-            podkidtobot = true;
-        else {
-            for (Values envalue : envalues)
-                if (value == envalue.getValue()) {
-                    podkidtobot = true;
-                    break;
-                }
-            for (Values playervalue : playervalues)
-                if (value == playervalue.getValue()) {
-                    podkidtobot = true;
-                    break;
-                }
+    public boolean PodkidtoBot(int value) {
+        boolean podkidtobot = false;
+        if (values.size() > 0){
+            if (envalues.size() + botvalues.size() == 0)
+                podkidtobot = true;
+            else {
+                for (Values envalue : envalues)
+                    if (value == envalue.getValue()) {
+                        podkidtobot = true;
+                        break;
+                    }
+                for (Values botvalue : botvalues)
+                    if (value == botvalue.getValue()) {
+                        podkidtobot = true;
+                        break;
+                    }
+            }
         }
         return podkidtobot;
     }
 
     // бот отбивается, метод возвращает выбранную им карту, которой он будет биться
-    public Values Bito_Card()
-    {
+    public Values Bito_Card() {
         returned_card = null;
-        values.sort(COMPARE_BY_VALUE);
+        //values.sort(COMPARE_BY_VALUE);
         for (int i = 0; i < envalues.size(); i++) {
             encard = envalues.get(i);
             for (int j = 0; j < values.size(); j++) {
@@ -178,7 +172,7 @@ class Bot {
                 if (((card.getMast() != M_K) && (card.getMast() == encard.getMast()) && (card.getValue() > encard.getValue())) || ((card.getMast() == M_K)
                         && (encard.getMast() != M_K || (card.getValue() > encard.getValue())))) {
                     returned_card = card;
-                    envalues.remove(i);
+                    //envalues.remove(i);
                     values.remove(j);
                     break;
                 }
@@ -187,26 +181,43 @@ class Bot {
         return returned_card;
     }
 
+    public boolean lackofcards()
+    {
+        return ((values.size() == 0) || (playervalues.size() == 0));
+    }
+
     // Бот ищет самую мелкую карту у себя в колоде
     public Values Hod_Card() {
         returned_card = null;
-        values.sort(COMPARE_BY_VALUE);
+        //values.sort(COMPARE_BY_VALUE);
         returned_card = values.get(0);
         values.remove(0);
         return returned_card;
     }
+    public void Sort() {
+        // Преобразование списков в массивы
+        Sorter sorter = new Sorter();
+        SorterBot sorterBot = new SorterBot();
+        values.sort(sorter);
+        playervalues.sort(sorter);
+    }
 
     // Интерфейс Comparator испольуется для сравнения значений карт у бота в рукаве, происходит сортировка карт по некоторому принципу
-    public static final Comparator<Values> COMPARE_BY_VALUE = new Comparator<Values>() {
-        @Override
+    public static class Sorter implements Comparator<Values> {
         public int compare(Values lhs, Values rhs) {
-            int first, second;
-            if (lhs.getMast() == M_K)
-                first = lhs.getValue() + 10;
-            else first = lhs.getValue();
-            if (rhs.getMast() == M_K)
-                second = rhs.getValue() + 10;
-            else second = rhs.getValue();
+            int first = lhs.getValue();
+            int second = rhs.getValue();
+            first += lhs.getMast() * n_values;
+            second += rhs.getMast() * n_values;
+            return first - second;
+        }
+    };
+    public static class SorterBot implements Comparator<Values> {
+        public int compare(Values lhs, Values rhs) {
+            int first = lhs.getMast();
+            int second = rhs.getMast();
+            first += lhs.getValue() * n_masts;
+            second += rhs.getValue() * n_masts;
             return first - second;
         }
     };
@@ -224,11 +235,9 @@ class Values {
         return Value;
     }
     private final int Value;
-    public boolean Enabled;
     public Values(int M, int V) {
         this.Mast = M;
         this.Value = V;
-        this.Enabled = true;
     }
 }
 
